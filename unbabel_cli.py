@@ -161,17 +161,21 @@ def calc_moving_average(list_of_minutes: list, data: list[dict], window_size: in
         total_duration=0
 
         for data_register in data:
-
-            # For each translation, checks if the timestamp is inside the window size of the current minute
-            if (minute-timedelta(minutes=window_size) <= data_register["timestamp"] <= minute):
-                # If yes, adds the duration of the translation and increments the counter to compute the current average delivery time
-                total_duration += data_register["duration"]
-                mv_avg["average_delivery_time"]=total_duration
-                samples_counter += 1
-            else:
-                # If the duration is not inside the window size, add zero to the total duration
+            # if the data's timestamp is greater than the minute in analysis there is no need to compute anything
+            if data_register["timestamp"] > minute:
                 total_duration += 0
                 mv_avg["average_delivery_time"]=total_duration
+            else:
+                # For each translation, checks if the timestamp is inside the window size of the current minute
+                if (minute-timedelta(minutes=window_size) <= data_register["timestamp"] <= minute):
+                    # If yes, adds the duration of the translation and increments the counter to compute the current average delivery time
+                    total_duration += data_register["duration"]
+                    mv_avg["average_delivery_time"]=total_duration
+                    samples_counter += 1
+                else:
+                    # If the duration is not inside the window size, add zero to the total duration
+                    total_duration += 0
+                    mv_avg["average_delivery_time"]=total_duration
 
         # Compute the moving average value by dividing the total duration by the total number of samples
         if samples_counter != 0:
