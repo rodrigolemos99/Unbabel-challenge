@@ -14,6 +14,7 @@ def check_translation_fields(translation_data: dict) -> str:
     Returns:
         boolean: A flag that indicates if the sample has the expected format.
     """
+    # Expected keys to be in the dictionaries
     expected_keys= [
         "timestamp",
         "translation_id",
@@ -25,6 +26,7 @@ def check_translation_fields(translation_data: dict) -> str:
         "duration"
     ]
 
+    # Types of the expected keys
     expected_types= [
         str,
         str,
@@ -79,20 +81,20 @@ def pars_translation_files(file_path: str) -> list[dict]:
     with open(file_path, "r") as file:
         for line in file:
             data = json.loads(line)
-            correct_format = check_translation_fields(data)
             # If the format of the translation is not correct, raises an Exception and stops the script.
             # If it is correct, proceeds.
+            correct_format = check_translation_fields(data)
             if correct_format:
+                # If it is not a duplicated translation
                 if data["translation_id"] not in processed_translations:
-                    # Parse each line as JSON and convert it to a dictionary
+                    # Append translation to the loaded_transaltions list and add the id to the already processed list
+                    loaded_translations.append(data)
+                    processed_translations.append(data["translation_id"])
                     try:
                         # Transform the timestamp string into a datetime.datetime type in order to facilitate the manipulation of data.
                         data["timestamp"] = datetime.strptime(data["timestamp"], "%Y-%m-%d %H:%M:%S.%f")
                     except ValueError:
                         raise ValueError("Timestamp field must be in this format: Year-Month-Day Hours:Minutes:Seconds:Microseconds. \nCorrect the file.")
-
-                    loaded_translations.append(data)
-                    processed_translations.append(data["translation_id"])
     
     return loaded_translations
 
@@ -107,7 +109,6 @@ def create_list_of_minutes(data: list[dict]) -> list:
     Return:
         list: A list with the sequence of timestamps.
     """ 
-
     # Since data comes ordered from the oldest to the most recent, the minimum timestamp is from the first translation and the maximum
     # timestamp is from the last translation.
 
@@ -161,10 +162,12 @@ def calc_moving_average(list_of_minutes: list, data: list[dict], window_size: in
         total_duration=0
 
         for data_register in data:
-            # if the data's timestamp is greater than the minute in analysis there is no need to compute anything
+            # If the data's timestamp is greater than the minute in analysis there is no need to check the following translations,
+            # since it is known that the timestamp will keep increasing
             if data_register["timestamp"] > minute:
                 total_duration += 0
                 mv_avg["average_delivery_time"]=total_duration
+                break
             else:
                 # For each translation, checks if the timestamp is inside the window size of the current minute
                 if (minute-timedelta(minutes=window_size) <= data_register["timestamp"] <= minute):
@@ -176,7 +179,7 @@ def calc_moving_average(list_of_minutes: list, data: list[dict], window_size: in
                     # If the duration is not inside the window size, add zero to the total duration
                     total_duration += 0
                     mv_avg["average_delivery_time"]=total_duration
-
+    
         # Compute the moving average value by dividing the total duration by the total number of samples
         if samples_counter != 0:
             mv_avg["average_delivery_time"] = mv_avg["average_delivery_time"]/samples_counter
@@ -218,7 +221,7 @@ def main():
 
     args = parser.parse_args()
 
-    # Build main workflow
+    # Build main workflow   
     parsed_data = pars_translation_files(args.path)
     list_of_minutes = create_list_of_minutes(parsed_data)
     moving_average_list = calc_moving_average(list_of_minutes, parsed_data, args.window_size)

@@ -7,9 +7,7 @@ import unbabel_cli as mv_avg_script
 # This script has the main objective to confirm that the implemented python functions to compute the moving average 
 # of the translations's duration work as expected.
 
-#Function calc_moving_average: check correct functioning
-
-# Pytest fixtures are inputs for the test function. The goal is to reutilize this fixtures instead of creating the input for every test.
+# Pytest fixtures are inputs for the test functions. The goal is to reutilize this fixtures instead of creating equal inputs for every test.
 
 @pytest.fixture
 def dummy_list_of_dicts():
@@ -31,7 +29,7 @@ def dummy_list_of_dicts():
     return sample_data
 
 @pytest.fixture
-def dummy_correct_json():
+def dummy_correct_translation():
     """
     Creates a dummy list with the expected format of the output of function pars_translation_files. 
     """
@@ -71,6 +69,7 @@ def dummy_list_of_minutes():
         datetime(2018, 12, 26, 18, 24),
     ]
     return expected_list
+
 
 # Here start the tests for function check_translation_fields.
 
@@ -121,14 +120,14 @@ def test_check_translation_fields_missing_field(dummy_list_of_dicts):
 
 # Here start the tests for function pars_translation_files.
 
-def test_pars_translation_files(dummy_correct_json):
+def test_pars_translation_files(dummy_correct_translation):
     """
     Test if pars_translation_files function works as expected, creating a list of dictionaries and converting timestamp
     from string to datetime.datetime.
     """
     parsed_file = mv_avg_script.pars_translation_files("tests_input_files/test_file.json")
 
-    assert parsed_file == dummy_correct_json 
+    assert parsed_file == dummy_correct_translation 
 
 
 def test_pars_translation_files_wrong_file_path():
@@ -157,24 +156,24 @@ def test_pars_translation_files_incorrect_timestamp():
 
 # Here start the tests for the function create_list_of_minutes
     
-def test_create_list_of_minutes(dummy_correct_json, dummy_list_of_minutes):
+def test_create_list_of_minutes(dummy_correct_translation, dummy_list_of_minutes):
     """
     Test if create_list_of_minutes function works as expected, creating a list of minutes staring from the latest timestamp's minute
     and ending the most recent timestamp's minute.
     """
-    list_of_minutes = mv_avg_script.create_list_of_minutes(dummy_correct_json)
+    list_of_minutes = mv_avg_script.create_list_of_minutes(dummy_correct_translation)
 
     assert list_of_minutes == dummy_list_of_minutes
 
-def test_create_list_of_minutes_wrong_order(dummy_correct_json):
+def test_create_list_of_minutes_wrong_order(dummy_correct_translation):
     """
     Test if create_list_of_minutes function handles a situation when the input file is not ordered from the latest
     to the most recent timestamp.
     """
-    dummy_correct_json_reversed = dummy_correct_json[::-1]
+    dummy_correct_translation_reversed = dummy_correct_translation[::-1]
 
     with pytest.raises(Exception) as wrong_order:
-        mv_avg_script.create_list_of_minutes(dummy_correct_json_reversed)
+        mv_avg_script.create_list_of_minutes(dummy_correct_translation_reversed)
 
     assert(
         str(wrong_order.value) == "File must be ordered from the latest translation to the most recent, please correct the input file."
@@ -183,11 +182,10 @@ def test_create_list_of_minutes_wrong_order(dummy_correct_json):
 
 # Here start the tests to function calc_moving_average
 
-def test_calc_moving_average(dummy_list_of_minutes, dummy_correct_json):
+def test_calc_moving_average(dummy_list_of_minutes, dummy_correct_translation):
     """
     Test if calc_moving_average function works as expected.
     """
-
     expected_output = [
         {"date": "2018-12-26 18:11:00", "average_delivery_time": 0},
         {"date": "2018-12-26 18:12:00", "average_delivery_time": 20},
@@ -205,16 +203,16 @@ def test_calc_moving_average(dummy_list_of_minutes, dummy_correct_json):
         {"date": "2018-12-26 18:24:00", "average_delivery_time": 42.5},
     ]
 
-    moving_avg = mv_avg_script.calc_moving_average(dummy_list_of_minutes, dummy_correct_json, 10)
+    moving_avg = mv_avg_script.calc_moving_average(dummy_list_of_minutes, dummy_correct_translation, 10)
 
     assert moving_avg == expected_output
 
-def test_calc_moving_average_wrong_window_size(dummy_correct_json):
+def test_calc_moving_average_wrong_window_size(dummy_correct_translation):
     """
     Test if calc_moving_average function handles a situation when the given window size is 0 or less.
     """
     with pytest.raises(Exception) as wrong_size:
-        mv_avg_script.calc_moving_average(dummy_list_of_minutes, dummy_correct_json, 0)
+        mv_avg_script.calc_moving_average(dummy_list_of_minutes, dummy_correct_translation, 0)
 
     assert(
         str(wrong_size.value) == "Window size value must be greater than 0."
