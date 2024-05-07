@@ -4,7 +4,7 @@ As an Unbabel Engineer, it is critical to monitor the delivery time of a transla
 
 ## Input File Format
 
-The input format is the fololowing:
+The input format is the following:
 
 `{"timestamp": "2018-12-26 18:11:08.509654","translation_id": "5aa5b2f39f7254a75aa5","source_language": "en","target_language": "fr","client_name": "airliberty","event_name": "translation_delivered","nr_words": 30, "duration": 20}`
 `{"timestamp": "2018-12-26 18:15:19.903159","translation_id": "5aa5b2f39f7254a75aa4","source_language": "en","target_language": "fr","client_name": "airliberty","event_name": "translation_delivered","nr_words": 30, "duration": 31}`

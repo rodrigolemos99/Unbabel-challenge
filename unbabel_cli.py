@@ -85,7 +85,6 @@ def pars_translation_files(file_path: str) -> list[dict]:
             if correct_format:
                 if data["translation_id"] not in processed_translations:
                     # Parse each line as JSON and convert it to a dictionary
-                    data = json.loads(line)
                     try:
                         # Transform the timestamp string into a datetime.datetime type in order to facilitate the manipulation of data.
                         data["timestamp"] = datetime.strptime(data["timestamp"], "%Y-%m-%d %H:%M:%S.%f")
